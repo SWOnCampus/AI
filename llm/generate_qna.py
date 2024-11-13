@@ -7,7 +7,7 @@ import requests
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # PDF 파일 경로 설정
-pdf_path = 'sample.pdf'
+pdf_path = '../src/sample.pdf'
 
 # PDF에서 텍스트 추출
 def extract_text_from_pdf(pdf_path):

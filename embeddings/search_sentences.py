@@ -1,4 +1,4 @@
-from src.sentence_transform import sentence_embedding, index
+from .sentence_transform import sentence_embedding, index
 import numpy as np
 
 

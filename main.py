@@ -1,5 +1,5 @@
-from src.sentence_transform import sentence_embedding_save, isInit
-from src.search_sentences import search_similar_sentences
+from embeddings.sentence_transform import sentence_embedding_save, isInit
+from embeddings.search_sentences import search_similar_sentences
 import time
 
 # 임베딩할 문장 리스트 (벡터 DB)
