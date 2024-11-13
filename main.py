@@ -1,6 +1,5 @@
-from embeddings.sentence_transform import sentence_embedding_save, isInit
-from embeddings.search_sentences import search_similar_sentences
-import time
+from embeddings.sentence_transform import sentence_embedding
+from storage.faiss_storage import sentence_embedding_save, search_similar_sentences
 
 # 임베딩할 문장 리스트 (벡터 DB)
 sentences = [
@@ -18,12 +17,10 @@ query_sentences = [
 
 
 if __name__ == '__main__':
-    # 초기화 대기
-    while(not isInit()):
-        time.sleep(1)
 
     # 저장할 문장 임베딩 후 저장
-    sentence_embedding_save(sentences)
+    embeddings = sentence_embedding(sentences)
+    sentence_embedding_save(embeddings)
 
     # 입력한 문장 기반 FAISS 인덱스 탐색
     search_similar_sentences(query_sentences, 4, sentences);
