@@ -1,10 +1,13 @@
 from sentence_transformers import SentenceTransformer
 import faiss
-# KoSentenceBERT 모델 로드
-model = SentenceTransformer('snunlp/KR-SBERT-V40K-klueNLI-augSTS')
 
-# KoSentenceBERT 모델의 문장 임베딩 벡터 길이
-embedding_dimension = 768
+# KoSentenceBERT 모델 로드
+# model = SentenceTransformer('snunlp/KR-SBERT-V40K-klueNLI-augSTS')
+
+model = SentenceTransformer('distiluse-base-multilingual-cased-v1')
+
+# 임베딩 벡터 길이
+embedding_dimension = 512
 
 # 코사인 유사도 기반 FAISS 인덱스 생성
 index = faiss.IndexFlatIP(embedding_dimension)
