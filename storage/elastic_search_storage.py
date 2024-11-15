@@ -15,6 +15,14 @@ es = Elasticsearch(
     verify_certs=True,
     ca_certs=ES_CA_CERT_PATH # http_ca.crt 파일 경로
 )
+class Category(Enum):
+    Industry = "Industry"
+    PainPoints = "PainPoints"
+    Solutions = "Solutions"
+    Data = "Data"
+    CostROI = "CostROI"
+    Risks = "Risks"
+
 
 class CompanySize(Enum):
     MICRO = "Micro"  # 초소형 기업
@@ -33,6 +41,7 @@ def get_database_schema():
     mapping = {
         "mappings": {
             "properties": {
+                "category": {"type": "keyword"},
                 "company_size": {"type": "keyword"},
                 "question": {"type": "text"},
                 "answer": {"type": "text"},
@@ -47,7 +56,7 @@ def get_database_schema():
     return mapping
 
 
-def save_qna_data(company_size, question, answer):
+def save_qna_data(company_size, question, answer, category):
 
     # 질문 내용 기준으로 임베딩
     embeddings = sentence_embedding(question)
@@ -56,7 +65,7 @@ def save_qna_data(company_size, question, answer):
     question_embedding = normalize_embeddings(embeddings)
 
     # Elastic_search 데이터 스키마 형식으로 변경
-    doc = create_doc_data(company_size, question, answer, question_embedding.tolist())
+    doc = create_doc_data(company_size, question, answer, question_embedding.tolist(), category)
 
     print(doc)
 
@@ -64,10 +73,11 @@ def save_qna_data(company_size, question, answer):
 
     print("저장된 데이터 : ", response)
 
-def create_doc_data(company_size, question, answer, question_embedding):
+def create_doc_data(company_size, question, answer, question_embedding, category):
 
     doc = {
         "company_size": company_size.value,
+        "category": category.value,
         "question": question,
         "answer": answer,
         "embedding": question_embedding
@@ -87,10 +97,10 @@ def get_saved_doc_data_by_id(index_name, doc_id):
     except Exception as e:
         print("오류 발생:", e)
 
-def get_similar_qna_data(company_size, data_size, question):
+def get_similar_qna_data(company_size, data_size, question, category):
     embedding_question = normalize_embeddings(sentence_embedding(question))
 
-    query = create_query(embedding_question.tolist(), company_size, data_size)
+    query = create_query(embedding_question.tolist(), company_size, data_size, category)
     print(query)
 
     response = es.search(index = ES_INDEX_NAME, body = query);
@@ -114,7 +124,14 @@ def get_all_data():
 
 
 
-def create_query(query_vector, company_size, data_size):
+def create_query(query_vector, company_size, data_size, category):
+    filter_list = []
+
+    if(company_size is not None):
+        filter_list.append({"match": {"company_size": company_size.value}})
+    if(category is not None):
+        filter_list.append({"match": {"category": category.value}})
+
     # 쿼리 작성
     query = {
         "size": data_size,
@@ -122,9 +139,7 @@ def create_query(query_vector, company_size, data_size):
             "script_score": {
                 "query": {
                     "bool": {
-                          "filter": [
-                            {"match": {"company_size":company_size.value}}
-                          ]
+                          "filter": filter_list
                         }
                       },
         "script": {
