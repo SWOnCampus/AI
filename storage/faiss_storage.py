@@ -1,11 +1,18 @@
-from .sentence_transform import sentence_embedding, index
+from embeddings.sentence_transform import sentence_embedding
 import numpy as np
+import faiss
 
 
-# 임베딩 벡터 정규화
-def normalize_embeddings(embeddings):
-    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
-    return embeddings / norms
+# 임베딩 벡터 길이
+embedding_dimension = 512
+
+# 코사인 유사도 기반 FAISS 인덱스 생성
+index = faiss.IndexFlatIP(embedding_dimension)
+
+def sentence_embedding_save(embeddings):
+    # 임베딩 된 문장 데이터를 FAISS에 저장
+    index.add(embeddings)
+
 def search_similar_sentences(sentences, k, embedded_sentences):
     embeddings = sentence_embedding(sentences)
     # 입력 문장 임베딩 정규화
@@ -15,6 +22,12 @@ def search_similar_sentences(sentences, k, embedded_sentences):
     distances, indices = index.search(normalized_embedding, k)
 
     print_result(sentences, distances, indices, embedded_sentences)
+
+# 임베딩 벡터 정규화
+def normalize_embeddings(embeddings):
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    return embeddings / norms
+
 
 def print_result(sentences, distances, indices, embedded_sentences):
     # 검색 결과 출력 (코사인 유사도)
