@@ -23,6 +23,8 @@ class Category(Enum):
     CostROI = "CostROI"
     Risks = "Risks"
 
+class Industry(Enum):
+    Retail = "Retail"
 
 class CompanySize(Enum):
     MICRO = "Micro"  # 초소형 기업
@@ -43,6 +45,7 @@ def get_database_schema():
             "properties": {
                 "category": {"type": "keyword"},
                 "company_size": {"type": "keyword"},
+                "industry": {"type": "keyword"},
                 "question": {"type": "text"},
                 "answer": {"type": "text"},
                 "embedding": {
