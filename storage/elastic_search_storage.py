@@ -33,7 +33,7 @@ def get_database_schema():
     mapping = {
         "mappings": {
             "properties": {
-                "company_size": {"type": "text"},
+                "company_size": {"type": "keyword"},
                 "question": {"type": "text"},
                 "answer": {"type": "text"},
                 "embedding": {
@@ -56,13 +56,16 @@ def save_qna_data(company_size, question, answer):
     question_embedding = normalize_embeddings(embeddings)
 
     # Elastic_search 데이터 스키마 형식으로 변경
-    doc = create_doc_data(company_size, question, answer, question_embedding)
+    doc = create_doc_data(company_size, question, answer, question_embedding.tolist())
+
+    print(doc)
 
     response = es.index(index=ES_INDEX_NAME, document=doc)
 
     print("저장된 데이터 : ", response)
 
 def create_doc_data(company_size, question, answer, question_embedding):
+
     doc = {
         "company_size": company_size.value,
         "question": question,
@@ -84,29 +87,57 @@ def get_saved_doc_data_by_id(index_name, doc_id):
     except Exception as e:
         print("오류 발생:", e)
 
-def get_similar_qna_data(company_size, ):
+def get_similar_qna_data(company_size, data_size, question):
+    embedding_question = normalize_embeddings(sentence_embedding(question))
+
+    query = create_query(embedding_question.tolist(), company_size, data_size)
+    print(query)
+
+    response = es.search(index = ES_INDEX_NAME, body = query);
+
+    print(":::: 쿼리 결과 ::::")
+    print(response)
+
+    return response
+
+def get_all_data():
+    query = {
+        "query": {
+            "match_all": {}
+        }
+    }
+
+    response = es.search(index = ES_INDEX_NAME, body = query)
+
+    print(response)
+
+
 
 
 def create_query(query_vector, company_size, data_size):
     # 쿼리 작성
     query = {
-        "size": data_size,  # 검색할 인접 벡터 수
+        "size": data_size,
         "query": {
-            "bool": {
-                "filter": [
-                    {"term": {"company_size": company_size.value}},  # 필터 조건 기업 규모에 맞게
-                ],
-                "must": {
-                    "script_score": {
-                        "query": {"match_all": {}},
-                        "script": {
-                            "source": "cosineSimilarity(params.query_vector, 'vector_field') + 1.0", # 코사인 유사도로 검색
-                            "params": {"query_vector": query_vector}
+            "script_score": {
+                "query": {
+                    "bool": {
+                          "filter": [
+                            {"match": {"company_size":company_size.value}}
+                          ]
                         }
-                    }
-                }
+                      },
+        "script": {
+            "source": "cosineSimilarity(params.query_vector, 'embedding') + 1.0",
+            "params": {
+                "query_vector":query_vector
             }
+          }
         }
-    }
+      },
+    "_source": ["question", "answer"]
+}
+
+
 
     return query
