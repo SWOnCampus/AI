@@ -1,6 +1,6 @@
 from embeddings.sentence_transform import sentence_embedding
 from storage.faiss_storage import sentence_embedding_save, search_similar_sentences
-from storage.elastic_search_storage import create_database, save_qna_data, CompanySize, get_similar_qna_data, get_saved_doc_data_by_id, get_all_data
+from storage.elastic_search_storage import create_database, save_qna_data, CompanySize, get_similar_qna_data, get_saved_doc_data_by_id, get_all_data, Category
 from constants import ES_INDEX_NAME
 
 # 임베딩할 문장 리스트 (벡터 DB)
@@ -18,6 +18,16 @@ query_sentences = [
 ]
 
 
+test_question = "매출 증대를 위한 고객 행동 분석을 AI의 도입을 통해 해결한 사례에는 어떤 것들이 있나요?"
+test_answer = "11번가는 고객의 행동 데이터를 분석하여 구매 주기가 길어진 고객에게 AI 기반의 맞춤 쿠폰 제공. 고객 이탈률을 10% 감소시키고, VIP 고객의 재구매율 증가."
+
+category = Category.PainPoints
+company_size = CompanySize.MEDIUM
+
+def create_data():
+    save_qna_data(company_size=company_size, question=test_question, answer=test_answer, category= category)
+
+
 if __name__ == '__main__':
 
     # 저장할 문장 임베딩 후 저장
@@ -31,12 +41,9 @@ if __name__ == '__main__':
 
     # DB 생성 (이미 존재하는 경우 무시)
     # create_database()
-    test_question = "대규모 데이터를 처리하는 데 가장 적합한 딥러닝 플랫폼은 무엇인가요?"
-    # test_answer = "대규모 데이터와 실시간 예측이 요구되는 환경에서는 구글의 Vertex AI나 아마존의 SageMaker와 같은 클라우드 기반 플랫폼이 적합합니다. Vertex AI는 통합 환경을 제공하여 모델 개발부터 배포까지의 전 과정을 한곳에서 관리할 수 있습니다. 대규모 연산을 처리하기 위해 다양한 GPU 및 TPU 옵션을 제공하며, 빅데이터와의 결합도 용이합니다. 또한 SageMaker는 분산 학습과 호환성이 뛰어나고, 실시간 예측 API를 제공하여 예측 결과를 바로 활용할 수 있습니다."
-
-    # save_qna_data(company_size=CompanySize.LARGE, question=test_question, answer= test_answer)
-    response = get_similar_qna_data(company_size=CompanySize.LARGE, question=test_question, data_size=3)
-    # get_all_data()
+    # create_data()
+    # response = get_similar_qna_data(company_size=CompanySize.LARGE, question=test_question, data_size=3)
+    get_all_data()
     # get_saved_doc_data_by_id(ES_INDEX_NAME, "ySAcLpMBhs7LHBg3Nqdm")
 
 
