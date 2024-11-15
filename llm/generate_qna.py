@@ -2,6 +2,7 @@ import pdfplumber
 import openai
 import os
 import requests
+from constants import MAAL_BASE_URL, MAAL_APP_ID, MAAL_NAME, MAAL_ITEM
 
 # OpenAI API 키
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -49,14 +50,14 @@ def generate_qna_maal(text, num_pairs=5):
     }
 
     # URL 설정
-    url = "https://norchestra.maum.ai/harmonize/dosmart"
+    url = MAAL_BASE_URL,
 
     # 바디 설정
     body = {
-        "app_id": "4b2a80e0-23bd-58f8-bd93-dc170681839c",
-        "name": "hansung_70b_chat",
+        "app_id": MAAL_APP_ID,
+        "name": MAAL_NAME,
         "item": [
-            "maumgpt-maal2-70b-chat"
+            MAAL_ITEM
         ],
         "param": [
             {
