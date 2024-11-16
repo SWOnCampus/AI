@@ -70,7 +70,7 @@ def get_database_schema():
     return mapping
 
 
-def save_qna_data(company_size, question, answer, category):
+def save_qna_data(company_size, question, answer, category, industry):
 
     # 질문 내용 기준으로 임베딩
     embeddings = sentence_embedding(question)
@@ -79,7 +79,7 @@ def save_qna_data(company_size, question, answer, category):
     question_embedding = normalize_embeddings(embeddings)
 
     # Elastic_search 데이터 스키마 형식으로 변경
-    doc = create_doc_data(company_size, question, answer, question_embedding.tolist(), category)
+    doc = create_doc_data(company_size, question, answer, question_embedding.tolist(), category, industry)
 
     print(doc)
 
@@ -87,14 +87,15 @@ def save_qna_data(company_size, question, answer, category):
 
     print("저장된 데이터 : ", response)
 
-def create_doc_data(company_size, question, answer, question_embedding, category):
+def create_doc_data(company_size, question, answer, question_embedding, category, industry):
 
     doc = {
         "company_size": company_size.value,
         "category": category.value,
         "question": question,
         "answer": answer,
-        "embedding": question_embedding
+        "embedding": question_embedding,
+        "industry": industry.value
     }
 
     return doc
