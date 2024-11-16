@@ -115,7 +115,7 @@ def get_similar_qna_data(data_size = 10, question = None, company_size = None, c
 
     if question is not None:
         embedding_question = normalize_embeddings(sentence_embedding(question))
-        query = create_query_vector(embeddings = embedding_question.tolist(), company_size= company_size, data_size = data_size, category = category)
+        query = create_query_vector(query_vector = embedding_question.tolist(), company_size= company_size,industry=industry , data_size = data_size, category = category)
     else:
         query = create_query_non_vector(data_size= data_size, company_size=company_size, industry= industry, category= category)
 
