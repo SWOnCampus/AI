@@ -1,4 +1,4 @@
-from storage.elastic_search_storage import Industry, CompanySize, Category, get_similar_qna_data
+from storage.elastic_search_storage import Industry, Category, get_similar_qna_data
 import openai
 import re
 
@@ -129,8 +129,39 @@ def create_consultion_result(industry, company_size, pain_point):
         retry = True # 재 요청 여부를 True로 변환, LLM 요청 프롬프트에서 형식 중요 추가
 
 
+    result += get_ai_service_require_data(industry, ai_service) # 필요 데이터 내용 생성
+
+
+
+
+
+def get_ai_service_require_data(industry, ai_service):
+    response = get_similar_qna_data(data_size=1, question=ai_service, category=Category.Data, industry=industry)
+
+    rag_data = extract_and_merge_answer(response)
+
+    prompt = f"""
+다음은 {ai_service}를 구현하기 위해 필요한 데이터 목록입니다. 제공된 RAG 데이터를 이용해서 필요한 데이터 목록들을 전문적이고 명확하게 정리해 주세요. 추가적인 정보나 추측 없이, 주어진 데이터에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요. 필요한 데이터의 대주제, 소주제, 예시들을 포함해 주세요.
+---
+**RAG 데이터:**
+{rag_data}
+
+---
+**요청 사항:**
+- 추가적인 정보나 추측 없이 제공된 데이터만을 사용해 주세요.
+- PDF 보고서에 적합하도록 깔끔하고 읽기 쉬운 형식으로 작성해 주세요.
+- 답변 형식은 개조식으로, 데이터의 주제 하위에 데이터의 예시가 포함되도록 작성해 주세요.
+"""
+
+    print(prompt)
+
+    answer = get_chat_gpt_answer(prompt)
+
+    print(answer)
+
 
 
 # merge_industry_example(industry=Industry.Retail, company_size=CompanySize.MEDIUM, category=Category.Industry)
 # get_industry_example_content(Industry.Retail, CompanySize.MEDIUM)
-get_recommend_ai_service(pain_point="매출 증대를 위한 고객 행동 분석", industry=Industry.Retail, company_size=CompanySize.MEDIUM, retry=True)
+# get_recommend_ai_service(pain_point="매출 증대를 위한 고객 행동 분석", industry=Industry.Retail, company_size=CompanySize.MEDIUM, retry=True)
+get_ai_service_require_data(Industry.Retail, "딥러닝")
