@@ -1,6 +1,7 @@
 from embeddings.sentence_transform import sentence_embedding
 from storage.faiss_storage import sentence_embedding_save, search_similar_sentences
 from storage.elastic_search_storage import create_database, save_qna_data, CompanySize, get_similar_qna_data, get_saved_doc_data_by_id, get_all_data, Category, Industry
+from llm.generate_result import create_consultion_result
 from constants import ES_INDEX_NAME
 
 # 임베딩할 문장 리스트 (벡터 DB)
@@ -19,9 +20,22 @@ query_sentences = [
 
 
 test_question = "딥러닝 기반의 고객 행동 분석 시스템"
-test_answer = "고객 프로필 데이터: 인구통계학적 정보(연령, 성별, 지역, 직업 등), 회원 가입 정보(가입일, 회원 등급, 선호 카테고리 등); 거래 데이터: 구매 이력(구매한 상품, 구매 날짜, 구매 금액, 결제 수단 등), 반품 및 교환 기록(반품/교환한 상품, 사유, 처리 결과 등); 웹사이트 및 앱 활동 데이터: 페이지 방문 기록(방문한 페이지, 체류 시간, 클릭한 링크 등), 검색 기록(검색어, 검색 시간, 검색 결과 클릭 여부 등), 장바구니 활동(장바구니에 추가한 상품, 제거한 상품, 보관 기간 등); 고객 서비스 상호작용 데이터: 고객 문의 기록(문의 내용, 문의 채널(전화, 이메일, 채팅 등), 처리 상태 등), 피드백 및 리뷰(제품 및 서비스에 대한 평가, 리뷰 내용, 평점 등); 소셜 미디어 데이터: 소셜 미디어 상호작용(좋아요, 공유, 댓글 등), 브랜드 언급(브랜드에 대한 언급 내용, 감정 분석 결과 등); 위치 데이터: 오프라인 매장 방문 기록(방문한 매장, 방문 시간, 구매 여부 등), 위치 기반 서비스 이용 기록(GPS를 통한 위치 추적 데이터 등); 기타 데이터: 설문 조사 응답(고객 만족도 조사 결과, 선호도 조사 응답 등), 로그인 및 인증 기록(로그인 시간, 로그인 방법, 실패 시도 등)."
+test_answer = """
+중견 소매 및 이커머스 기업이 딥러닝 기반의 고객 행동 분석 시스템을 도입하려면, 여러 요소를 고려하여 예산을 책정해야 합니다. 주요 비용 요소는 다음과 같습니다:
 
-category = Category.Data
+데이터 수집 및 전처리: 고객의 거래 기록, 웹사이트 클릭 패턴, 소셜 미디어 활동 등 다양한 데이터를 수집하고 정제하는 과정이 필요합니다. 이 단계에서는 데이터 라벨링 여부에 따라 비용이 달라질 수 있습니다. 라벨링이 되어 있지 않은 경우 추가 작업이 필요하여 비용이 증가할 수 있습니다. 
+숨고
+
+모델 개발 및 학습: 고객 데이터를 분석하는 데 적합한 딥러닝 모델을 선택하고 학습시키는 과정입니다. 이 단계에서는 머신러닝 전문가의 인건비와 컴퓨팅 자원 비용이 포함됩니다. 숨고에 따르면, 인공지능(AI) 개발의 평균 비용은 약 100만 원이며, 최저 60만 원에서 최고 200만 원으로 책정됩니다. 
+숨고
+
+시스템 통합 및 배포: 개발된 모델을 기존 시스템에 통합하고 실제 운영 환경에 배포하는 과정입니다. 이 단계에서는 시스템 통합 비용과 인프라 구축 비용이 발생합니다.
+
+유지보수 및 업데이트: 시스템 운영 중 발생하는 문제를 해결하고, 새로운 데이터에 맞춰 모델을 업데이트하는 데 필요한 비용입니다.
+
+이러한 요소들을 종합적으로 고려할 때, 중견기업이 딥러닝 기반의 고객 행동 분석 시스템을 도입하는 데 드는 총 예산은 수천만 원에서 수억 원에 이를 수 있습니다. 정확한 비용은 기업의 요구사항, 데이터의 양과 복잡성, 시스템의 규모 등에 따라 달라지므로, 전문 컨설팅 업체와 협의하여 상세한 견적을 받는 것이 좋습니다.
+"""
+category = Category.CostROI
 company_size = CompanySize.MEDIUM
 industry = Industry.Retail
 
@@ -44,8 +58,10 @@ if __name__ == '__main__':
     # create_database()
     # create_data()
     # response = get_similar_qna_data(company_size=CompanySize.LARGE, question=test_question, data_size=3)
-    get_all_data()
+    # get_all_data()
     # get_saved_doc_data_by_id(ES_INDEX_NAME, "ySAcLpMBhs7LHBg3Nqdm")
+    response = create_consultion_result(industry=industry, company_size=company_size, pain_point="매출 증대를 위한 고객 행동 분석.")
+    print(response)
 
 
 
