@@ -20,6 +20,7 @@ class Category(Enum):
     PainPoints = "PainPoints"
     Solutions = "Solutions"
     Data = "Data"
+    Process = "Process"
     CostROI = "CostROI"
     Risks = "Risks"
 
