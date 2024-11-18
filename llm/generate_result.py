@@ -115,7 +115,7 @@ def get_ai_service_from_answer(answer):
     else:
         print("AI 서비스 정보를 찾을 수 없습니다.")
 
-def create_consultion_result(industry, company_size, pain_point):
+def create_consulting_result(industry, company_size, pain_point):
     result = "1. 경쟁사 AI 도입 사례\n"
     result += get_industry_example_content(industry=industry, company_size=company_size)
 
@@ -230,13 +230,50 @@ def get_ai_service_ROI(ai_service, industry, company_size, recommend_ai_answer):
 
     return answer
 
+
+def get_summary_result(result):
+
+    prompt = f"""
+다음은 컨설팅 정보에 대한 내용입니다. 제공된 내용을 중요한 정보들 로만 요약해 주세요. 추가적인 정보나 추측 없이, 주어진 정보에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요.
+---
+**컨설팅 정보 내용**
+{result}
+---
+**요청 사항:**
+- 추가적인 정보나 추측 없이 제공된 데이터만을 사용해 주세요.
+- PDF 보고서에 적합하도록 깔끔하고 읽기 쉬운 형식으로 작성해 주세요.
+- 답변은 **개조식**으로 작성해 주세요.
+- 답변 형식에 맞춰서 답변해 주세요.
+---
+**답변 형식:**
+
+1. 경쟁사 AI 도입 사례
+  -
+
+2. Pain point 관련 추천 AI
+  -
+  
+3. AI 도입 시 필요 데이터
+  -
+
+4. AI 도입 프로세스
+  -
+  
+5. 예상 비용 및 ROI
+  -
+"""
+
+    answer = get_chat_gpt_answer(prompt)
+    return answer
+
+
 # merge_industry_example(industry=Industry.Retail, company_size=CompanySize.MEDIUM, category=Category.Industry)
 # get_industry_example_content(Industry.Retail, CompanySize.MEDIUM)
-answer = get_recommend_ai_service(pain_point="매출 증대를 위한 고객 행동 분석", industry=Industry.Retail, company_size=CompanySize.MEDIUM, retry=False)
+# answer = get_recommend_ai_service(pain_point="매출 증대를 위한 고객 행동 분석", industry=Industry.Retail, company_size=CompanySize.MEDIUM, retry=False)
 # get_ai_service_require_data(Industry.Retail, "딥러닝")
 
-ai_service = "매출 증대를 위한 고객 행동 분석"
+# ai_service = "매출 증대를 위한 고객 행동 분석"
 # response = get_similar_qna_data(data_size=1, question=ai_service, category=Category.Data, industry=Industry.Retail)
 # data_category_rag = extract_and_merge_answer(response)
 # get_ai_service_process(ai_service, data_category_rag, Industry.Retail, company_size=CompanySize.MEDIUM)
-get_ai_service_ROI(ai_service=ai_service, industry=Industry.Retail, company_size=CompanySize.MEDIUM, recommend_ai_answer=answer)
+# get_ai_service_ROI(ai_service=ai_service, industry=Industry.Retail, company_size=CompanySize.MEDIUM, recommend_ai_answer=answer)
