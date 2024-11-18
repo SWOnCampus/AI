@@ -1,6 +1,7 @@
 from embeddings.sentence_transform import sentence_embedding
 from storage.faiss_storage import sentence_embedding_save, search_similar_sentences
-from storage.elastic_search_storage import create_database, save_qna_data, CompanySize, get_similar_qna_data, get_saved_doc_data_by_id, get_all_data, Category
+from storage.elastic_search_storage import create_database, save_qna_data, CompanySize, get_similar_qna_data, get_saved_doc_data_by_id, get_all_data, Category, Industry
+from llm.generate_result import create_consultion_result
 from constants import ES_INDEX_NAME
 
 # 임베딩할 문장 리스트 (벡터 DB)
@@ -18,14 +19,28 @@ query_sentences = [
 ]
 
 
-test_question = "매출 증대를 위한 고객 행동 분석을 AI의 도입을 통해 해결한 사례에는 어떤 것들이 있나요?"
-test_answer = "11번가는 고객의 행동 데이터를 분석하여 구매 주기가 길어진 고객에게 AI 기반의 맞춤 쿠폰 제공. 고객 이탈률을 10% 감소시키고, VIP 고객의 재구매율 증가."
+test_question = "딥러닝 기반의 고객 행동 분석 시스템"
+test_answer = """
+중견 소매 및 이커머스 기업이 딥러닝 기반의 고객 행동 분석 시스템을 도입하려면, 여러 요소를 고려하여 예산을 책정해야 합니다. 주요 비용 요소는 다음과 같습니다:
 
-category = Category.PainPoints
+데이터 수집 및 전처리: 고객의 거래 기록, 웹사이트 클릭 패턴, 소셜 미디어 활동 등 다양한 데이터를 수집하고 정제하는 과정이 필요합니다. 이 단계에서는 데이터 라벨링 여부에 따라 비용이 달라질 수 있습니다. 라벨링이 되어 있지 않은 경우 추가 작업이 필요하여 비용이 증가할 수 있습니다. 
+숨고
+
+모델 개발 및 학습: 고객 데이터를 분석하는 데 적합한 딥러닝 모델을 선택하고 학습시키는 과정입니다. 이 단계에서는 머신러닝 전문가의 인건비와 컴퓨팅 자원 비용이 포함됩니다. 숨고에 따르면, 인공지능(AI) 개발의 평균 비용은 약 100만 원이며, 최저 60만 원에서 최고 200만 원으로 책정됩니다. 
+숨고
+
+시스템 통합 및 배포: 개발된 모델을 기존 시스템에 통합하고 실제 운영 환경에 배포하는 과정입니다. 이 단계에서는 시스템 통합 비용과 인프라 구축 비용이 발생합니다.
+
+유지보수 및 업데이트: 시스템 운영 중 발생하는 문제를 해결하고, 새로운 데이터에 맞춰 모델을 업데이트하는 데 필요한 비용입니다.
+
+이러한 요소들을 종합적으로 고려할 때, 중견기업이 딥러닝 기반의 고객 행동 분석 시스템을 도입하는 데 드는 총 예산은 수천만 원에서 수억 원에 이를 수 있습니다. 정확한 비용은 기업의 요구사항, 데이터의 양과 복잡성, 시스템의 규모 등에 따라 달라지므로, 전문 컨설팅 업체와 협의하여 상세한 견적을 받는 것이 좋습니다.
+"""
+category = Category.CostROI
 company_size = CompanySize.MEDIUM
+industry = Industry.Retail
 
 def create_data():
-    save_qna_data(company_size=company_size, question=test_question, answer=test_answer, category= category)
+    save_qna_data(company_size=company_size, question=test_question, answer=test_answer, category= category, industry= industry)
 
 
 if __name__ == '__main__':
@@ -43,8 +58,10 @@ if __name__ == '__main__':
     # create_database()
     # create_data()
     # response = get_similar_qna_data(company_size=CompanySize.LARGE, question=test_question, data_size=3)
-    get_all_data()
+    # get_all_data()
     # get_saved_doc_data_by_id(ES_INDEX_NAME, "ySAcLpMBhs7LHBg3Nqdm")
+    response = create_consultion_result(industry=industry, company_size=company_size, pain_point="매출 증대를 위한 고객 행동 분석.")
+    print(response)
 
 
 

@@ -20,15 +20,29 @@ class Category(Enum):
     PainPoints = "PainPoints"
     Solutions = "Solutions"
     Data = "Data"
+    Process = "Process"
     CostROI = "CostROI"
     Risks = "Risks"
 
+class Industry(Enum):
+    Retail = "Retail"
+
+    def get_string(self):
+        if(self.value == "Retail"):
+            return "소매/이커머스"
 
 class CompanySize(Enum):
-    MICRO = "Micro"  # 초소형 기업
     SMALL = "Small"  # 소기업
     MEDIUM = "Medium"  # 중견 기업
     LARGE = "Large"  # 대기업
+
+    def get_string(self):
+        if(self.value == "Small"):
+            return "중소 기업"
+        elif(self.value == "Medium"):
+            return "중견 기업"
+        else:
+            return "대기업"
 
 def create_database():
 
@@ -43,6 +57,7 @@ def get_database_schema():
             "properties": {
                 "category": {"type": "keyword"},
                 "company_size": {"type": "keyword"},
+                "industry": {"type": "keyword"},
                 "question": {"type": "text"},
                 "answer": {"type": "text"},
                 "embedding": {
@@ -56,7 +71,7 @@ def get_database_schema():
     return mapping
 
 
-def save_qna_data(company_size, question, answer, category):
+def save_qna_data(company_size, question, answer, category, industry):
 
     # 질문 내용 기준으로 임베딩
     embeddings = sentence_embedding(question)
@@ -65,7 +80,7 @@ def save_qna_data(company_size, question, answer, category):
     question_embedding = normalize_embeddings(embeddings)
 
     # Elastic_search 데이터 스키마 형식으로 변경
-    doc = create_doc_data(company_size, question, answer, question_embedding.tolist(), category)
+    doc = create_doc_data(company_size, question, answer, question_embedding.tolist(), category, industry)
 
     print(doc)
 
@@ -73,14 +88,15 @@ def save_qna_data(company_size, question, answer, category):
 
     print("저장된 데이터 : ", response)
 
-def create_doc_data(company_size, question, answer, question_embedding, category):
+def create_doc_data(company_size, question, answer, question_embedding, category, industry):
 
     doc = {
         "company_size": company_size.value,
         "category": category.value,
         "question": question,
         "answer": answer,
-        "embedding": question_embedding
+        "embedding": question_embedding,
+        "industry": industry.value
     }
 
     return doc
@@ -97,10 +113,14 @@ def get_saved_doc_data_by_id(index_name, doc_id):
     except Exception as e:
         print("오류 발생:", e)
 
-def get_similar_qna_data(company_size, data_size, question, category):
-    embedding_question = normalize_embeddings(sentence_embedding(question))
+def get_similar_qna_data(data_size = 10, question = None, company_size = None, category = None, industry = None):
 
-    query = create_query(embedding_question.tolist(), company_size, data_size, category)
+    if question is not None:
+        embedding_question = normalize_embeddings(sentence_embedding(question))
+        query = create_query_vector(query_vector = embedding_question.tolist(), company_size= company_size,industry=industry , data_size = data_size, category = category)
+    else:
+        query = create_query_non_vector(data_size= data_size, company_size=company_size, industry= industry, category= category)
+
     print(query)
 
     response = es.search(index = ES_INDEX_NAME, body = query);
@@ -122,11 +142,31 @@ def get_all_data():
     print(response)
 
 
-
-
-def create_query(query_vector, company_size, data_size, category):
+def create_query_non_vector(company_size, industry, category,  data_size):
     filter_list = []
+    if(industry is not None):
+        filter_list.append({"match": {"industry": industry.value}})
+    if(company_size is not None):
+        filter_list.append({"match": {"company_size": company_size.value}})
+    if(category is not None):
+        filter_list.append({"match": {"category": category.value}})
 
+    query = {
+        "size": data_size,
+        "query": {
+            "bool": {
+                "filter": filter_list
+            }
+        },
+        "_source": ["question", "answer"]
+    }
+
+    return query
+
+def create_query_vector(query_vector, company_size, industry, category, data_size):
+    filter_list = []
+    if(industry is not None):
+        filter_list.append({"match": {"industry": industry.value}})
     if(company_size is not None):
         filter_list.append({"match": {"company_size": company_size.value}})
     if(category is not None):
