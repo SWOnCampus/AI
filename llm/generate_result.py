@@ -16,20 +16,11 @@ def create_consulting_result(industry, company_size, pain_point):
     result = ""
     append_result_content(result=result, title=CONSULTING_RESULT_TITLES[0], content=get_industry_example_content(industry=industry, company_size=company_size)) # AI 사례
 
-    recommend_ai_answer = None # 추천 AI 서비스 LLM 응답 결과
-    ai_service = None # 응답 결과에서 추출 된 추천 AI 서비스 (LLM이 응답 형식에 맞게 답변하는 경우 추출)
-    retry = False # 추천 AI 서비스 추출 여부
-
-    while ai_service is None: # 만약 ai_service를 추출할 수 없으면 다시 요청
-        recommend_ai_answer = get_recommend_ai_service(pain_point= pain_point, industry=industry, company_size=company_size, retry= retry)
-        ai_service = get_ai_service_from_answer(recommend_ai_answer)
-        retry = True # 재 요청 여부를 True로 변환, LLM 요청 프롬프트에서 형식 중요 추가
+    recommend_ai_answer, ai_service = get_ai_service_datas(pain_point=pain_point, industry=industry, company_size=company_size) # 추천 AI 서비스
 
     append_result_content(result=result, title=CONSULTING_RESULT_TITLES[1], content=recommend_ai_answer)
 
-    data_category_rag_datas = get_similar_qna_data(data_size=1, question=ai_service, category=Category.Data, industry=industry)
-    data_category_rag = extract_and_merge_answer(data_category_rag_datas)
-
+    data_category_rag = get_category_rag_data(ai_service= ai_service, industry=industry)
 
     append_result_content(result=result, title=CONSULTING_RESULT_TITLES[2], content=get_ai_service_require_data(industry, ai_service, data_category_rag))
 
@@ -40,6 +31,8 @@ def create_consulting_result(industry, company_size, pain_point):
                           content=get_ai_service_ROI(ai_service=ai_service, industry=industry, company_size=company_size, recommend_ai_answer=recommend_ai_answer))
 
     return result
+
+
 
 # 경쟁사 AI 도입 사례 내용 생성
 def get_industry_example_content(industry, company_size):
@@ -170,6 +163,26 @@ def get_ai_service_from_answer(answer):
     else:
         print("AI 서비스 정보를 찾을 수 없습니다.")
 
+
+# 추천 AI 서비스 관련 응답 내용, 추출된 AI 응답 서비스
+def get_ai_service_datas(pain_point, industry, company_size):
+    answer = None # 추천 AI 서비스 LLM 응답 결과
+    extract_ai_service = None # 응답 결과에서 추출 된 추천 AI 서비스 (LLM이 응답 형식에 맞게 답변하는 경우 추출)
+    retry = False # 추천 AI 서비스 추출 여부
+
+    while extract_ai_service is None: # 만약 ai_service를 추출할 수 없으면 다시 요청
+        answer = get_recommend_ai_service(pain_point= pain_point, industry=industry, company_size=company_size, retry= retry)
+        extract_ai_service = get_ai_service_from_answer(answer)
+        retry = True # 재 요청 여부를 True로 변환, LLM 요청 프롬프트에서 형식 중요 추가
+
+    return answer, extract_ai_service
+
+# 데이터 카테고리 관련 RAG 데이터 추출
+def get_category_rag_data(ai_service, industry):
+    data_category_rag_datas = get_similar_qna_data(data_size=1, question=ai_service, category=Category.Data, industry=industry)
+    data_category_rag = extract_and_merge_answer(data_category_rag_datas)
+
+    return data_category_rag
 
 # 컨설팅 결과 데이터 내용 추가
 def append_result_content(result, title, content):
