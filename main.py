@@ -53,10 +53,17 @@ class ConsultingRequest(BaseModel):
                 "pain_point": "매출 증대를 위한 고객 행동 분석"
             }
         }
+
+
+class ConsultingResponse(BaseModel):
+    result: str = Field(..., description="컨설팅 결과 내용")
+
+
 @app.post("/consulting",
           summary="컨설팅 결과 생성",
           description="주어진 정보를 바탕으로 컨설팅 결과를 생성하고, 필요하면 요약된 결과를 반환",
-          response_description="컨설팅 결과 내용"
+          response_description="컨설팅 결과 내용",
+          response_model=ConsultingResponse
           )
 def get_consulting_result(request: ConsultingRequest,
     summary: bool = Query(False, description="컨설팅 결과 정보 요약 여부 (True/False)")  # 쿼리 파라미터 추가
@@ -68,7 +75,7 @@ def get_consulting_result(request: ConsultingRequest,
     response = create_consulting_result(industry=industry, company_size=company_size, pain_point=pain_point);
     if summary is True:
         response = get_summary_result(response)
-    return {"response": response}
+    return {"result": response}
 
 
 
