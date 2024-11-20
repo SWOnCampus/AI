@@ -6,3 +6,4 @@ numpy
 openai
 pdfplumber
 sentence_transformers
+uvicorn
