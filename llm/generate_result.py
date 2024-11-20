@@ -1,12 +1,16 @@
 from storage.elastic_search_storage import Industry, Category, get_similar_qna_data, CompanySize
 from embeddings.sentence_transform import sentence_embedding
-from scipy.spatial.distance import cosine
+
 from hallucination.validate_hallucination import validate_hallucination
 from .generate_consulting_prompt import *
 import openai
 import re
 
 HALLUCINATION_BOUND = 0.7;
+OPENAI_MODEL = "gpt-3.5-turbo"
+OPENAI_MAX_TOKENS = 4096
+
+PRINT_REQUEST_PROMPT = False # 프롬프트 출력 여부
 
 # 경쟁사 AI 도입 사례 내용 생성
 def get_industry_example_content(industry, company_size):
@@ -20,12 +24,13 @@ def get_industry_example_content(industry, company_size):
              return answer
 
 def get_chat_gpt_answer(prompt, temperature=0.7):
-    print(prompt)
+    if PRINT_REQUEST_PROMPT is True:
+        print(prompt)
 
     response = openai.ChatCompletion.create(
-        model='gpt-3.5-turbo',
+        model=OPENAI_MODEL,
         messages=[{'role': 'user', 'content': prompt}],
-        max_tokens=4096,
+        max_tokens=OPENAI_MAX_TOKENS,
         temperature=temperature,
     )
 
@@ -159,28 +164,6 @@ def get_summary_result(result):
              return answer
 
         return answer
-
-def validate_hallucination_cosine_similarity(rag_data, answer):
-    rag_embedding = sentence_embedding(rag_data)
-    answer_embedding = sentence_embedding(answer)
-    print("::::: 입력 RAG 데이터 :::::\n")
-    print(rag_data + "\n\n")
-
-    print("::::: LLM 반환 내용 :::::\n")
-    print(answer + "\n\n")
-
-    similarity = get_cosine_similarity(rag_embedding, answer_embedding)
-
-    print(f":::: 할루시네이션 검증 유사도 : {similarity * 100}% ::::\n")
-
-    if(similarity < HALLUCINATION_BOUND):
-        return False
-    return True
-
-
-def get_cosine_similarity(vector1, vector2):
-    cosine_similarity = cosine(vector1, vector2)
-    return cosine_similarity
 
 
 
