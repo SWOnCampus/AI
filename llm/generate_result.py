@@ -1,13 +1,17 @@
 from storage.elastic_search_storage import Industry, Category, get_similar_qna_data, CompanySize
+from embeddings.sentence_transform import sentence_embedding
+from scipy.spatial.distance import cosine
 import openai
 import re
 
+HALLUCINATION_BOUND = 0.7;
+
 # 경쟁사 AI 도입 사례 내용 생성
 def get_industry_example_content(industry, company_size):
+    while (True):
+         examples = merge_industry_example(industry=industry, company_size=company_size, category=Category.Industry)
 
-     examples = merge_industry_example(industry=industry, company_size=company_size, category=Category.Industry)
-
-     prompt = f"""
+         prompt = f"""
 다음은 {industry.get_string()} 산업 분야의 {company_size.get_string()}들이 AI를 도입한 사례들입니다. 제공된 데이터만을 사용하여 경쟁사의 AI 도입 사례를 전문적이고 명확하게 정리해 주세요. 추가적인 정보나 추측 없이, 주어진 데이터에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요. 각 기업의 이름, AI 도입 목적, 구체적인 성과 및 영향을 포함해 주세요.
 ---
 
@@ -34,10 +38,10 @@ def get_industry_example_content(industry, company_size):
   -
 - **영향:**
 """
-     answer = get_chat_gpt_answer(prompt)
+         answer = get_chat_gpt_answer(prompt)
 
-
-     return answer
+         if validate_hallucination(examples, answer) is True:
+             return answer
 
 def get_chat_gpt_answer(prompt, temperature=0.7):
     print(prompt)
@@ -69,11 +73,12 @@ def extract_and_merge_answer(response):
 
 # pain point 기반 추천 AI 서비스
 def get_recommend_ai_service(pain_point, industry, company_size, retry):
-    response = get_similar_qna_data(data_size=5, company_size=company_size, category=Category.PainPoints, industry= industry, question=pain_point)
+    while(True):
+        response = get_similar_qna_data(data_size=5, company_size=company_size, category=Category.PainPoints, industry= industry, question=pain_point)
 
-    examples = extract_and_merge_answer(response)
+        examples = extract_and_merge_answer(response)
 
-    prompt = f"""
+        prompt = f"""
 다음은 {industry.get_string()} 산업 분야의 {company_size.get_string()}들이 문제점을 해결하기 위해 AI를 도입한 사례들입니다. 제공된 데이터만을 사용하여 문제점을 해결하기 위해 가장 적합한 AI서비스를 추천해주세요. 추가적인 정보나 추측 없이, 주어진 데이터에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요. 추천하는 AI기술과 기술에 대한 설명, 기대효과를 구체적이고 명확하게 정리해 주세요.
 ---
 **문제점**
@@ -99,10 +104,12 @@ AI 서비스 :
 기대 효과 :
 """
 
-    answer = get_chat_gpt_answer(prompt=prompt, temperature=0.3)
+        answer = get_chat_gpt_answer(prompt=prompt, temperature=0.3)
 
+        if validate_hallucination(examples, answer) is True:
+             return answer
 
-    return answer;
+        return answer;
 
 
 def get_ai_service_from_answer(answer):
@@ -147,8 +154,8 @@ def create_consulting_result(industry, company_size, pain_point):
     return result
 
 def get_ai_service_require_data(industry, ai_service, rag_data):
-
-    prompt = f"""
+    while(True):
+        prompt = f"""
 다음은 {industry.get_string} 기업에서 {ai_service}를 구현하기 위해 필요한 데이터 목록입니다. 제공된 RAG 데이터를 이용해서 필요한 데이터 목록들을 전문적이고 명확하게 정리해 주세요. 추가적인 정보나 추측 없이, 주어진 데이터에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요. 필요한 데이터의 대주제, 소주제, 예시들을 포함해 주세요.
 ---
 **RAG 데이터:**
@@ -162,16 +169,20 @@ def get_ai_service_require_data(industry, ai_service, rag_data):
 """
 
 
-    answer = get_chat_gpt_answer(prompt)
+        answer = get_chat_gpt_answer(prompt)
 
-    return answer
+        if validate_hallucination(rag_data, answer) is True:
+             return answer
+
+        return answer
 
 def get_ai_service_process(ai_service, data_category_rag, industry, company_size):
-    response = get_similar_qna_data(data_size=1, question=ai_service, category=Category.Process)
+    while(True):
+        response = get_similar_qna_data(data_size=1, question=ai_service, category=Category.Process)
 
-    rag_data = extract_and_merge_answer(response)
+        rag_data = extract_and_merge_answer(response)
 
-    prompt = f"""
+        prompt = f"""
 다음은 {company_size.get_string} {industry.get_string}에서 {ai_service}를 구현하기 위한 프로세스 과정과 활용할 데이터 입니다. 제공된 RAG 데이터들을 이용해서 {ai_service} 구현 프로세스를 전문적이고 명확하게 정리해 주세요. 추가적인 정보나 추측 없이, 주어진 데이터에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요.
 ---
 **RAG 데이터 - 프로세스:**
@@ -191,16 +202,20 @@ def get_ai_service_process(ai_service, data_category_rag, industry, company_size
 - 개조식에 해당하지 내용만 작성하세요.
 """
 
-    answer = get_chat_gpt_answer(prompt)
+        answer = get_chat_gpt_answer(prompt)
 
-    return answer
+        if validate_hallucination(rag_data + data_category_rag, answer) is True:
+             return answer
+
+        return answer
 
 def get_ai_service_ROI(ai_service, industry, company_size, recommend_ai_answer):
-    response = get_similar_qna_data(data_size=1, question=ai_service, category=Category.CostROI, company_size=company_size, industry=industry)
+    while(True):
+        response = get_similar_qna_data(data_size=1, question=ai_service, category=Category.CostROI, company_size=company_size, industry=industry)
 
-    rag_data = extract_and_merge_answer(response)
+        rag_data = extract_and_merge_answer(response)
 
-    prompt = f"""
+        prompt = f"""
 다음은 {company_size.get_string} {industry.get_string}에서 {ai_service}를 구현할 때 예상 예산 책정 방법을 위한 RAG 데이터 입니다. 제공된 RAG 데이터들을 이용해서 {ai_service} 구현할 때 예상 예산 금액과 ROI를 예측해 주세요. 추가적인 정보나 추측 없이, 주어진 데이터에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요.
 ---
 **RAG 데이터 - 구현할 AI 서비스:**
@@ -226,14 +241,19 @@ def get_ai_service_ROI(ai_service, industry, company_size, recommend_ai_answer):
 """
 
 
-    answer = get_chat_gpt_answer(prompt)
+        answer = get_chat_gpt_answer(prompt)
 
-    return answer
+        if validate_hallucination(ai_service + rag_data, answer) is True:
+             return answer
+
+        return answer
 
 
 def get_summary_result(result):
 
-    prompt = f"""
+    while(True):
+
+        prompt = f"""
 다음은 컨설팅 정보에 대한 내용입니다. 제공된 내용을 중요한 정보들 로만 요약해 주세요. 추가적인 정보나 추측 없이, 주어진 정보에 기반하여 내용을 구성해야 합니다. PDF 보고서에 포함될 수 있도록 구조화된 형식으로 작성해 주세요.
 ---
 **컨설팅 정보 내용**
@@ -263,8 +283,38 @@ def get_summary_result(result):
   -
 """
 
-    answer = get_chat_gpt_answer(prompt)
-    return answer
+        answer = get_chat_gpt_answer(prompt)
+
+        if validate_hallucination(result, answer) is True:
+             return answer
+
+        return answer
+
+def validate_hallucination(rag_data, answer):
+    rag_embedding = sentence_embedding(rag_data)
+    answer_embedding = sentence_embedding(answer)
+    print("::::: 입력 RAG 데이터 :::::\n")
+    print(rag_data + "\n\n")
+
+    print("::::: LLM 반환 내용 :::::\n")
+    print(answer + "\n\n")
+
+    similarity = get_cosine_similarity(rag_embedding, answer_embedding)
+
+    print(f":::: 할루시네이션 검증 유사도 : {similarity * 100}% ::::\n")
+
+    if(similarity < HALLUCINATION_BOUND):
+        return False
+    return True
+
+
+def get_cosine_similarity(vector1, vector2):
+    cosine_similarity = cosine(vector1, vector2)
+    return cosine_similarity
+
+
+
+
 
 
 # merge_industry_example(industry=Industry.Retail, company_size=CompanySize.MEDIUM, category=Category.Industry)
