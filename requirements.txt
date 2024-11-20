@@ -7,3 +7,5 @@ openai
 pdfplumber
 sentence_transformers
 uvicorn
+scipy
+bert-score
