@@ -1,12 +1,9 @@
-from storage.elastic_search_storage import Industry, Category, get_similar_qna_data, CompanySize
-from embeddings.sentence_transform import sentence_embedding
-
+from storage.elastic_search_storage import Category, get_similar_qna_data
 from hallucination.validate_hallucination import validate_hallucination
 from .generate_consulting_prompt import *
 import openai
 import re
 
-HALLUCINATION_BOUND = 0.7;
 OPENAI_MODEL = "gpt-3.5-turbo"
 OPENAI_MAX_TOKENS = 4096
 
