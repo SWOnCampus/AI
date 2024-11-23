@@ -16,6 +16,7 @@ async def send_info(id, title, data_type, content):
             await client.send_text(json.dumps(data, ensure_ascii=False))
         except Exception as e:
             connected_clients.remove(client)
+            continue;
 
 
 async def send_info_test():
