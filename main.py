@@ -68,11 +68,6 @@ class ConsultingResponse(BaseModel):
     result: str = Field(..., description="컨설팅 결과 내용")
 
 
-@app.get("/send-data")
-async def send_data_to_clients():
-    for client in connected_clients.copy():
-        await client.send_text("test")
-
 @app.post("/api/consulting",
           summary="컨설팅 결과 생성",
           description="주어진 정보를 바탕으로 컨설팅 결과를 생성하고, 필요하면 요약된 결과를 반환",
