@@ -1,11 +1,11 @@
+import constants
 from storage.elastic_search_storage import Category, get_similar_qna_data
 from hallucination.validate_hallucination import validate_hallucination
 from .generate_consulting_prompt import *
 from log.send_log_data import send_info
-import os
 import openai
 import re
-import asyncio
+
 
 OPENAI_MODEL = "gpt-3.5-turbo"
 OPENAI_MAX_TOKENS = 4096
@@ -16,7 +16,7 @@ CONSULTING_RESULT_TITLES = ["1. 경쟁사 AI 도입 사례", "2. Pain Point 관�
 
 SEND_LOG_SOCKET = True # 웹 소켓 로그 전달 여부
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = constants.OPENAI_API_KEY
 
 # 컨설팅 데이터 생성
 async def create_consulting_result(industry, company_size, pain_point, data_id):
