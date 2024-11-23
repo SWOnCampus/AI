@@ -3,7 +3,7 @@ fastapi
 elasticsearch
 pydantic
 numpy
-openai
+openai==0.28
 pdfplumber
 sentence_transformers
 uvicorn
