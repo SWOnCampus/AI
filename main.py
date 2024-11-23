@@ -1,10 +1,13 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from embeddings.sentence_transform import sentence_embedding
 from storage.faiss_storage import sentence_embedding_save, search_similar_sentences
 from storage.elastic_search_storage import create_database, save_qna_data, CompanySize, get_similar_qna_data, get_saved_doc_data_by_id, get_all_data, Category, Industry
 from llm.generate_result import create_consulting_result, get_summary_result
 from constants import ES_INDEX_NAME
+from globals import connected_clients
+from log.send_log_data import send_info_test
+import asyncio
 
 # # 임베딩할 문장 리스트 (벡터 DB)
 # sentences = [
@@ -40,6 +43,8 @@ from constants import ES_INDEX_NAME
 # industry = Industry.Retail
 #
 
+data_id = 0;
+
 app = FastAPI()
 class ConsultingRequest(BaseModel):
     industry: Industry = Field(..., description="산업군 (Retail)")
@@ -59,6 +64,11 @@ class ConsultingResponse(BaseModel):
     result: str = Field(..., description="컨설팅 결과 내용")
 
 
+@app.get("/send-data")
+async def send_data_to_clients():
+    for client in connected_clients.copy():
+        await client.send_text("test")
+
 @app.post("/api/consulting",
           summary="컨설팅 결과 생성",
           description="주어진 정보를 바탕으로 컨설팅 결과를 생성하고, 필요하면 요약된 결과를 반환",
@@ -66,17 +76,40 @@ class ConsultingResponse(BaseModel):
           response_model=ConsultingResponse
           )
 
-def get_consulting_result(request: ConsultingRequest,
+async def get_consulting_result(request: ConsultingRequest,
     summary: bool = Query(False, description="컨설팅 결과 정보 요약 여부 (True/False)")  # 쿼리 파라미터 추가
 ):
+    global data_id
+    data_id += 1
     industry = request.industry
     company_size = request.company_size
     pain_point = request.pain_point
 
-    response = create_consulting_result(industry=industry, company_size=company_size, pain_point=pain_point);
+    response = await create_consulting_result(industry=industry, company_size=company_size, pain_point=pain_point, data_id=data_id);
     if summary is True:
         response = get_summary_result(response)
     return {"result": response}
+
+@app.websocket("/ws")
+async def websocket_connect(websocket: WebSocket):
+    await websocket.accept()
+    connected_clients.append(websocket)
+    try:
+        while True:
+            await asyncio.sleep(10)  # 10초마다 Heartbeat 전송
+    except WebSocketDisconnect:
+        connected_clients.remove(websocket)
+        print("클라이언트 연결 해제")
+
+@app.websocket("/ws/test")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
+    connected_clients.append(websocket)
+
+    await send_info_test()
+
+
 
 
 
@@ -99,6 +132,4 @@ def get_consulting_result(request: ConsultingRequest,
     # get_saved_doc_data_by_id(ES_INDEX_NAME, "ySAcLpMBhs7LHBg3Nqdm")
     # response = create_consulting_result(industry=industry, company_size=company_size, pain_point="매출 증대를 위한 고객 행동 분석.")
     # print(response)
-
-
 

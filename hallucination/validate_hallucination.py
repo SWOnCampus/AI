@@ -1,11 +1,11 @@
 from bert_score import score
 from embeddings.sentence_transform import sentence_embedding
 from scipy.spatial.distance import cosine
-
+from log.send_log_data import send_info
 
 HALLUCINATION_BOUND = 0.6
 
-def validate_hallucination(rag_data, answer):
+async def validate_hallucination(rag_data, answer, title, data_id):
 
     print("::::: 입력 RAG 데이터 :::::\n")
     print(rag_data + "\n\n")
@@ -15,6 +15,14 @@ def validate_hallucination(rag_data, answer):
 
     # BERTScore 계산
     P, R, F1 = score([answer], [rag_data], lang="ko", verbose=False)
+
+    log_data = {
+        "Precision": f"{P.mean().item():.4f}",
+        "Recall": f"{R.mean().item():.4f}",
+        "F1 Score": f"{F1.mean().item():.4f}"
+    }
+
+    await send_info(id=data_id, title=title, data_type="hallucination", content=log_data)
 
     # 결과 출력
     print(f"Precision: {P.mean().item():.4f}")
