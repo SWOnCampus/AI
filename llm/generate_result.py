@@ -136,7 +136,7 @@ def extract_and_merge_answer(response):
     examples = ""
 
     for example in source:
-        examples += example + "\n"
+        examples += example + "\n\n"
 
     return examples
 
